@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+_archive/
+.DS_Store
+concat_files.py
+concatenated_code.txt
