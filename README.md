@@ -225,12 +225,12 @@ This initial PoC establishes the synchronous foundation. Future iterations aim t
 *   **ADK Evaluation:** Integrate ADK's evaluation framework (`adk eval`) to measure performance and accuracy.
 *   **UI Enhancements:** Improve the frontend to better visualize multi-agent activity, tool calls, and potentially handle more complex inputs/outputs.
 
-## Contributing
+## 📜 License
 
-*(Optional: Add guidelines if you intend for others to contribute)*
+This project is licensed under the Apache License 2.0. See the [LICENSE](./LICENSE) file.
 
-This project is currently a proof-of-concept. Contributions, suggestions, and issue reporting are welcome! Please follow standard GitHub practices (Issues, Pull Requests).
+## 🤝 Contributing & Disclaimer
 
-## License
+This is a personal project by [Heiko Hotz](https://github.com/heiko-hotz) to explore Gemini capabilities. Suggestions and feedback are welcome via Issues or Pull Requests.
 
-*(Specify your chosen license, e.g., Apache 2.0)*
+**This project is developed independently and does not reflect the views or efforts of Google.**
