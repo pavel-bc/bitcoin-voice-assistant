@@ -58,6 +58,9 @@ The user interacts with the Host Agent via a simple web UI (adapted from Project
 
 **Execution Flow:**
 
+![Flow](assets/flow.png)
+
+
 1.  **Input (ADK Live):** The frontend captures user audio and streams it via WebSocket to the ADK Live Server (app/live_server.py).
 2.  **Host Agent Processing (ADK):** The live_server passes the input to the ADK Runner managing the HostAgent. The HostAgent (using a Live API compatible Gemini model) processes the audio/text input, identifies the intent and the stock ticker symbol (e.g., "MSFT").
 3.  **Tool Invocation (ADK -> A2A Client):** The HostAgent decides to use its call_specialist_stock_agent tool (an ADK FunctionTool). This tool acts as an A2A Client.
