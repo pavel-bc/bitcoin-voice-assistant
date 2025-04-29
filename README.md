@@ -57,10 +57,6 @@ The initial proof-of-concept focuses on a clear, synchronous end-to-end flow: **
 The user interacts with the Host Agent via a simple web UI (adapted from Project Pastra), primarily using voice input. They ask for the current price of a stock (e.g., *"What is the price of Microsoft?"*).
 
 **Execution Flow:**
-
-![Flow](assets/flow.png)
-
-
 1.  **Input (ADK Live):** The frontend captures user audio and streams it via WebSocket to the ADK Live Server (app/live_server.py).
 2.  **Host Agent Processing (ADK):** The live_server passes the input to the ADK Runner managing the HostAgent. The HostAgent (using a Live API compatible Gemini model) processes the audio/text input, identifies the intent and the stock ticker symbol (e.g., "MSFT").
 3.  **Tool Invocation (ADK -> A2A Client):** The HostAgent decides to use its call_specialist_stock_agent tool (an ADK FunctionTool). This tool acts as an A2A Client.
@@ -76,6 +72,8 @@ The user interacts with the Host Agent via a simple web UI (adapted from Project
 13. **Final Response Generation (ADK):** The HostAgent receives the tool result dictionary. Its LLM formulates a natural language response (e.g., "Microsoft is trading at $XXX.XX USD.").
 14. **Audio Output (ADK Live):** ADK synthesizes the text response into audio using the configured Live API model/voice.
 15. **Streaming Output (ADK Live -> UI):** The `live_server` streams the audio chunks via WebSocket back to the user interface, where it is played back in real-time.
+
+![Flow](assets/flow.png)
 
 **This initial phase successfully validates the core integration points between ADK Live, A2A, and MCP over stdio in a synchronous workflow.**
 
