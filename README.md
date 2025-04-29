@@ -11,6 +11,8 @@
 
 **Project Horizon explores the future of collaborative, multimodal AI agent systems.** It investigates how sophisticated, responsive, and interoperable agents can be built by integrating cutting-edge agent development frameworks and open communication protocols. This proof-of-concept demonstrates the powerful synergy between **Google's Agent Development Kit (ADK)** (leveraging the **Gemini Live API** for real-time interaction), the **Agent2Agent (A2A) protocol**, and the **Model Context Protocol (MCP)**.
 
+![High-Level Architecture](assets/high-level-architecture.png)
+
 This project serves as a reference implementation and a testbed for:
 
 *   Integrating diverse agent frameworks and tools.
@@ -40,12 +42,6 @@ Project Horizon is more than just a demonstration of a single capability; it's a
 *   **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live):** Enables the low-latency, bidirectional, streaming voice (and potentially video) interactions with the Gemini model, powering the real-time user experience within ADK's `run_live`.
 *   **[Agent2Agent Protocol (A2A)](https://google.github.io/A2A/):** The open standard used for communication and task delegation between the ADK Host Agent and backend "Specialist Agents". Enables interoperability between potentially different agent implementations.
 *   **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/):** The open standard allowing Specialist Agents (acting as MCP Clients) to securely interact with dedicated "Tool Servers" (MCP Servers) that provide access to specific functionalities or data (e.g., fetching stock prices).
-
-## Architecture
-
-This diagram illustrates the high-level conceptual architecture Project Horizon aims to enable: a user interacting with a primary Host Agent, which delegates tasks to various Specialist Agents (potentially built with different frameworks) via A2A. These Specialist Agents then leverage MCP to securely access specific tools or data sources.
-
-![High-Level Architecture](assets/high-level-architecture.png)
 
 
 
