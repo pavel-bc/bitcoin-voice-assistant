@@ -6,7 +6,6 @@ import logging
 import json
 from typing import Optional
 
-# Assuming 'common' is in the parent directory or python path
 from common.client import A2AClient
 from common.types import (
     TaskSendParams, Message, TextPart, SendTaskResponse, TaskState, Artifact,
@@ -108,7 +107,7 @@ async def run_a2a_test(symbol: str, server_url: str, session_id: Optional[str] =
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test client for the StockInfoAgent A2A server.")
     parser.add_argument("symbol", help="The stock ticker symbol to query (e.g., MSFT).")
-    parser.add_argument("--url", default="http://127.0.0.1:8001/a2a", help="The full URL of the A2A server endpoint.")
+    parser.add_argument("--url", default="http://127.0.0.1:8001", help="The full URL of the A2A server endpoint.")
     parser.add_argument("--session", default=None, help="Optional session ID to use.")
 
     args = parser.parse_args()

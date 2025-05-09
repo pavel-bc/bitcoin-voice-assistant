@@ -1,4 +1,3 @@
-# specialist_agents/stock_info_agent/task_manager.py
 import os
 import logging
 import json
@@ -16,8 +15,7 @@ from common.types import (
     SendTaskStreamingRequest, SendTaskStreamingResponse, # <--- Import these
     UnsupportedOperationError, JSONRPCResponse # <--- Import these
 )
-# Import the MCP client logic function
-# from .mcp_client_logic import call_mcp_get_stock_price
+
 
 from .agent import create_agent_with_mcp_tools
 from mcp.types import TextContent, CallToolResult

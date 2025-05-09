@@ -1,5 +1,3 @@
-# live-agent-project/adk_agents/stock_info_agent/agent.py
-
 import asyncio
 import os
 import sys
@@ -24,7 +22,6 @@ print(f"dotenv_path: {dotenv_path}")
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
 
-
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -40,26 +37,7 @@ logger.info(f"---------------------------------")
 APP_NAME = "stock_info_adk_app"
 USER_ID = "test_user_stock"
 SESSION_ID = "session_stock_001"
-MODEL = "gemini-2.0-flash-001" # Ensure this model is available via your GOOGLE_API_KEY
-
-# --- Dynamically find the MCP Server script path ---
-# This assumes the adk_agent script is in adk_agents/stock_info_agent/
-# and the mcp server script is in mcp_servers/stock_mcp_server/
-# relative to the project root.
-try:
-    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    MCP_SERVER_SCRIPT_NAME = "server.py"
-    MCP_SERVER_FOLDER = os.path.join(PROJECT_ROOT, "mcp_servers", "stock_mcp_server")
-    MCP_SERVER_SCRIPT_PATH = os.path.join(MCP_SERVER_FOLDER, MCP_SERVER_SCRIPT_NAME)
-
-    # Verify the path exists
-    if not os.path.isfile(MCP_SERVER_SCRIPT_PATH):
-        raise FileNotFoundError(f"MCP Server script not found at calculated path: {MCP_SERVER_SCRIPT_PATH}")
-    logger.info(f"Found MCP server script path: {MCP_SERVER_SCRIPT_PATH}")
-
-except Exception as e:
-    logger.critical(f"CRITICAL ERROR: Could not determine MCP server path. {e}")
-    sys.exit(1) # Exit if the path is wrong, as the agent cannot function
+MODEL = os.getenv('STOCK_INFO_AGENT_MODEL', "gemini-2.0-flash-001")
 
 # --- MCP Tool Loading Function ---
 async def get_mcp_tools_async(mcp_server_script_path: str) -> tuple[list, AsyncExitStack]:
@@ -122,77 +100,3 @@ async def create_agent_with_mcp_tools(mcp_server_script_path: str) -> tuple[Agen
     )
     logger.info(f"ADK Agent '{stock_info_agent.name}' created with MCP tools.")
     return stock_info_agent, exit_stack
-
-# --- Main Execution Logic ---
-async def async_main():
-    """Sets up the runner and runs a sample query against the agent."""
-    agent = None
-    exit_stack = None
-    try:
-        # Create the agent and get the exit stack for cleanup
-        agent, exit_stack = await create_agent_with_mcp_tools(MCP_SERVER_SCRIPT_PATH)
-
-        # Standard ADK setup
-        session_service = InMemorySessionService()
-        runner = Runner(
-            agent=agent,
-            app_name=APP_NAME,
-            session_service=session_service,
-            # artifact_service=... # Add if needed
-            # memory_service=... # Add if needed
-        )
-        logger.info("ADK Runner initialized.")
-
-        # Create a session
-        session = session_service.create_session(
-            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID, state={}
-        )
-        logger.info(f"Session '{SESSION_ID}' created.")
-
-        # Define the user query
-        user_query = "What is the current price of Microsoft stock (MSFT)?"
-        logger.info(f"User Query: '{user_query}'")
-        content = genai_types.Content(role='user', parts=[genai_types.Part(text=user_query)])
-
-        # Run the agent
-        logger.info("Running agent execution...")
-        events_async = runner.run_async(
-            session_id=session.id, user_id=session.user_id, new_message=content
-        )
-
-        final_response_text = "Agent did not produce a final response."
-        async for event in events_async:
-            logger.info(f"Received Event: Author={event.author}, Content Present={bool(event.content)}, Actions Present={bool(event.actions)}")
-            # Optional: More detailed logging of event parts
-            # if event.content:
-            #     logger.debug(f"  Event Content Parts: {event.content.parts}")
-            if event.is_final_response() and event.content and event.content.parts:
-                final_response_text = event.content.parts[0].text or "[Non-text response]"
-
-        logger.info(f"Agent Final Response: {final_response_text}")
-        logger.info("Agent execution finished.")
-
-    except FileNotFoundError as fnf_error:
-         logger.critical(f"Setup failed: {fnf_error}. Cannot proceed.")
-    except Exception as e:
-        logger.error(f"An error occurred during agent execution: {e}", exc_info=True)
-    finally:
-        # CRUCIAL: Ensure the MCP connection is closed
-        if exit_stack:
-            logger.info("Closing MCP server connection via exit stack...")
-            await exit_stack.aclose()
-            logger.info("MCP server connection closed.")
-        else:
-             logger.warning("Exit stack was not initialized, cannot close MCP connection cleanly.")
-
-# --- Script Entry Point ---
-if __name__ == "__main__":
-    logger.info("Starting ADK agent script...")
-    try:
-        asyncio.run(async_main())
-    except KeyboardInterrupt:
-        logger.info("Script interrupted by user.")
-    except Exception as e:
-        logger.critical(f"Unhandled exception in main execution: {e}", exc_info=True)
-    finally:
-        logger.info("ADK agent script finished.")

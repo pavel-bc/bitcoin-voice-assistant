@@ -1,4 +1,3 @@
-# specialist_agents/stock_info_agent/__main__.py
 import os
 import logging
 import click
@@ -20,15 +19,34 @@ logging.basicConfig(level=os.getenv('LOG_LEVEL', 'INFO').upper(),
                     format='%(asctime)s - %(name)s - %(levelname)s - A2A_SERVER - %(message)s')
 logger = logging.getLogger(__name__)
 
+# --- Environment Variable Defaults for Click Options ---
+# These are read once at module load time after .env is processed.
+# Click options will use these values for defaults and to determine 'required' status.
+ENV_STOCK_INFO_AGENT_A2A_SERVER_HOST = os.getenv("STOCK_INFO_AGENT_A2A_SERVER_HOST")
+ENV_STOCK_INFO_AGENT_A2A_SERVER_PORT = os.getenv("STOCK_INFO_AGENT_A2A_SERVER_PORT")
+ENV_STOCK_MCP_SERVER_PATH = os.getenv("STOCK_MCP_SERVER_PATH")
+
 # --- Main Function ---
 @click.command()
-@click.option("--host", default=os.getenv("SPECIALIST_SERVER_HOST", "127.0.0.1"), help="Host to bind the A2A server to.")
-@click.option("--port", default=int(os.getenv("SPECIALIST_SERVER_PORT", "8001")), type=int, help="Port to bind the A2A server to.")
+@click.option("--host",
+              default=ENV_STOCK_INFO_AGENT_A2A_SERVER_HOST,
+              help="Host to bind the A2A server to. Reads from STOCK_INFO_AGENT_A2A_SERVER_HOST environment variable.",
+              required=ENV_STOCK_INFO_AGENT_A2A_SERVER_HOST is None,
+              show_default=True)
+@click.option("--port",
+              default=ENV_STOCK_INFO_AGENT_A2A_SERVER_PORT,
+              type=int,
+              help="Port to bind the A2A server to. Reads from STOCK_INFO_AGENT_A2A_SERVER_PORT environment variable.",
+              required=ENV_STOCK_INFO_AGENT_A2A_SERVER_PORT is None,
+              show_default=True)
 @click.option("--mcp-server-path",
-              default=os.getenv("STOCK_MCP_SERVER_PATH"),
-              help="Absolute path to the stock_mcp_server.py script.",
-              required=not os.getenv("STOCK_MCP_SERVER_PATH") # Make required if not in env
+              default=ENV_STOCK_MCP_SERVER_PATH,
+              help="Absolute path to the stock_mcp_server.py script. Reads from STOCK_MCP_SERVER_PATH environment variable.",
+              required=ENV_STOCK_MCP_SERVER_PATH is None,
+              show_default=True # Added for consistency, Click will show the default if available.
              )
+
+
 def main(host: str, port: int, mcp_server_path: str):
     """Starts the StockInfoAgent A2A Server."""
     logger.info("Starting StockInfoAgent A2A Server...")
@@ -36,11 +54,18 @@ def main(host: str, port: int, mcp_server_path: str):
     logger.info(f"  Port: {port}")
     logger.info(f"  MCP Server Script Path: {mcp_server_path}")
 
-    # --- Verify MCP Server Path ---
+    # --- Convert MCP Server Path to Absolute if Necessary ---
     if not os.path.isabs(mcp_server_path):
-        logger.error(f"Error: Provided MCP server path is not absolute: '{mcp_server_path}'")
-        click.echo("Error: MCP server path must be absolute.", err=True)
-        return
+        logger.info(f"MCP server path '{mcp_server_path}' is relative. Converting to absolute path.")
+        # Assume the relative path is from the project root or current working directory.
+        # For consistency, let's resolve it relative to the project root.
+        # The .env file is at project_root/.env, and this script is at project_root/specialist_agents/stock_info_agent/__main__.py
+        # So, to get to the project root from this script's directory: os.path.dirname(__file__)/../../
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        mcp_server_path = os.path.join(project_root, mcp_server_path)
+        logger.info(f"Resolved MCP server path to: {mcp_server_path}")
+    
+    # --- Verify MCP Server Path ---
     if not os.path.exists(mcp_server_path):
         logger.error(f"Error: MCP server script not found at: '{mcp_server_path}'")
         click.echo(f"Error: MCP server script not found at: '{mcp_server_path}'", err=True)
@@ -60,7 +85,7 @@ def main(host: str, port: int, mcp_server_path: str):
         agent_card = AgentCard(
             name="StockInfoAgent",
             description="Provides current stock price information using the yfinance library via MCP.",
-            url=f"http://{host}:{port}/a2a", # Define the A2A endpoint path
+            url=f"http://{host}:{port}", # Define the A2A endpoint path
             provider={"organization": "ProjectHorizon"},
             version="1.0.0",
             defaultInputModes=["text/plain"],
@@ -82,12 +107,11 @@ def main(host: str, port: int, mcp_server_path: str):
             task_manager=task_manager,
             host=host,
             port=port,
-            endpoint="/a2a" # Specify the endpoint path for A2A methods
+            # endpoint="/a2a" # Specify the endpoint path for A2A methods
         )
         logger.info(f"A2A Server configured to listen on {host}:{port} at endpoint '{server.endpoint}'")
 
         # --- Start the Server ---
-        # server.start() likely calls uvicorn.run internally
         server.start()
 
     except ValueError as ve:

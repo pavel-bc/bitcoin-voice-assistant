@@ -367,8 +367,36 @@ if __name__ == "__main__":
         sys.path.insert(0, str(project_root))
         logger.debug(f"Added project root to sys.path for direct execution: {project_root}")
 
-    LIVE_SERVER_HOST = os.getenv("LIVE_SERVER_HOST", "127.0.0.1")
-    LIVE_SERVER_PORT = int(os.getenv("LIVE_SERVER_PORT", "8082")) # Defaulting back to 8081
+    # --- Environment Variable Loading & Validation ---
+    # Load .env file from the project root if it exists
+    # Assuming a logger 'logger' and 'sys' module are already imported and configured earlier in the file.
+
+    LIVE_SERVER_MODEL_ID = os.getenv("LIVE_SERVER_MODEL")
+    if not LIVE_SERVER_MODEL_ID:
+        logger.warning(
+            "LIVE_SERVER_MODEL environment variable not set. Using default 'gemini-2.0-flash-live-001'."
+        )
+        LIVE_SERVER_MODEL_ID = "gemini-2.0-flash-live-001"
+
+    LIVE_SERVER_HOST = os.getenv("LIVE_SERVER_HOST")
+    if LIVE_SERVER_HOST is None:
+        logger.critical(
+            "CRITICAL: LIVE_SERVER_HOST environment variable not set. This is a required variable."
+        )
+        sys.exit(1)
+
+    raw_port = os.getenv("LIVE_SERVER_PORT")
+    if raw_port is None:
+        logger.critical("LIVE_SERVER_PORT is not set in the environment variables or .env file. This is a required setting.")
+        sys.exit(1)
+    
+    try:
+        LIVE_SERVER_PORT = int(raw_port)
+    except ValueError:
+        logger.critical(f"Invalid LIVE_SERVER_PORT: '{raw_port}'. Port must be an integer.")
+        sys.exit(1)
+    # --- End LIVE_SERVER_PORT check ---
+
     logger.info(f"Starting Project Horizon Live Server on http://{LIVE_SERVER_HOST}:{LIVE_SERVER_PORT}")
     try:
         import uvicorn

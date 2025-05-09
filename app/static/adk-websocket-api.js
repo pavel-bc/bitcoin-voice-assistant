@@ -27,7 +27,6 @@ class ADKWebSocketAPI extends EventEmitter {
         this.connectButton = document.getElementById('connectButton');
         this.stopButton = document.getElementById('stopButton');
         this.micButton = document.getElementById('micButton');
-        this.mockToggle = document.getElementById('mockToggle'); // Get checkbox
         this.connectContainer = document.getElementById('connectButtonContainer');
         this.mediaContainer = document.getElementById('mediaButtonsContainer');
 
@@ -85,12 +84,8 @@ class ADKWebSocketAPI extends EventEmitter {
     async connect() { // Make connect async
         this.sessionID = uuid.v4();
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // *** Ensure this points to your actual running backend ***
-        // Determine host and construct endpoint dynamically
-        const wsHost = window.location.host; // e.g., "localhost:8000" or "your-app.run.app"
-        // Assuming UI runs on standard ports (80, 443) or locally on 8000,
-        // and backend runs on 8082. Adjust if needed.
-        const backendPort = "8082"; // Port where live_server.py runs
+        // Use the port the current page is served from
+        const backendPort = window.location.port || (wsProtocol === "wss:" ? "443" : "80"); 
         const wsEndpoint = `${wsProtocol}//${window.location.hostname}:${backendPort}/ws/${this.sessionID}`;
 
         console.log('Attempting to connect WebSocket to:', wsEndpoint);
@@ -251,11 +246,6 @@ class ADKWebSocketAPI extends EventEmitter {
         this.endUserTurn(); // End turn immediately after sending text
     }
 
-    sendToggleMock(isMocking) {
-         console.log(`Sending mock toggle: ${isMocking}`);
-         this._sendMessage({ type: 'toggle_mock', value: isMocking });
-    }
-
     endUserTurn() {
         console.log("Signaling end of user turn.");
         this._sendMessage({ type: 'end_of_turn' });
@@ -370,12 +360,6 @@ class ADKWebSocketAPI extends EventEmitter {
             } else {
                 await this._startRecording(); // Await start recording
             }
-        };
-
-        this.mockToggle.onchange = (event) => {
-             const isChecked = event.target.checked;
-             console.log(`Mock toggle changed: ${isChecked}`);
-             this.sendToggleMock(isChecked);
         };
     }
 }

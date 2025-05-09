@@ -1,4 +1,3 @@
-# host_agent/agent.py
 import logging
 import os
 from google.adk.agents import Agent # Main ADK Agent class
@@ -27,30 +26,8 @@ logger = logging.getLogger(__name__)
 # --- Model Configuration ---
 # IMPORTANT: Use a model ID that supports the Live API for run_live
 # Check Google AI Studio or Vertex AI docs for current Live API compatible models
-MODEL_ID_LIVE = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001") # Example, verify availability
+MODEL_ID_LIVE = os.getenv("LIVE_SERVER_MODEL", "gemini-2.0-flash-live-001") # Example, verify availability
 
-# --- Optional Callback for Mocking ---
-def check_mocking_before_tool(
-    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
-) -> Optional[Dict]:
-    """
-    Checks 'mock_a2a_calls' state flag before calling the A2A tool.
-    If True, returns a mock success response, skipping the actual A2A call.
-    """
-    # Only intercept the specific A2A tool
-    if tool.name == "call_specialist_stock_agent":
-        should_mock = tool_context.state.get("mock_a2a_calls", False)
-        if should_mock:
-            symbol = args.get("symbol", "MOCK")
-            logger.warning(f"ADK Callback: MOCKING A2A tool call for symbol '{symbol}'.")
-            # Return a dictionary matching the tool's success output structure
-            return {"status": "success", "data": {"symbol": symbol.upper(), "price": 999.99, "currency": "USD", "mocked": True}}
-        else:
-            logger.info("ADK Callback: Mocking disabled. Allowing actual A2A tool call.")
-            return None # Allow actual tool call
-    else:
-        # For any other tool, allow it to proceed
-        return None
 
 # --- Host Agent Definition ---
 host_agent = None
@@ -71,13 +48,7 @@ if stock_a2a_tool: # Only define if the tool was imported successfully
                     "Handle other conversational turns naturally.",
         # Provide the A2A client tool
         tools=[stock_a2a_tool],
-        # Add the callback to enable mocking via state
-        # before_tool_callback=check_mocking_before_tool,
-        # ADK's run_live implicitly handles multimodal input/output setup
-        # when used with a compatible model and runner configuration.
     )
     logger.info(f"ADK Host Agent '{host_agent.name}' created with model '{MODEL_ID_LIVE}'.")
 else:
     logger.critical("Host Agent could not be created because the A2A tool ('stock_a2a_tool') failed to load.")
-    # Consider raising an exception or exiting if the host agent is critical
-    # raise RuntimeError("Host Agent creation failed due to missing tool.")

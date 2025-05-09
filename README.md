@@ -43,14 +43,12 @@ Project Horizon is more than just a demonstration of a single capability; it's a
 *   **[Agent2Agent Protocol (A2A)](https://google.github.io/A2A/):** The open standard used for communication and task delegation between the ADK Host Agent and backend "Specialist Agents". Enables interoperability between potentially different agent implementations.
 *   **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/):** The open standard allowing Specialist Agents (acting as MCP Clients) to securely interact with dedicated "Tool Servers" (MCP Servers) that provide access to specific functionalities or data (e.g., fetching stock prices).
 
-
-
 ## Current Scenario Demonstrated (v0.1 - Synchronous Stock Lookup)
 
 The initial proof-of-concept focuses on a clear, synchronous end-to-end flow: **Real-Time Stock Price Lookup**.
 
 **User Interaction:**
-The user interacts with the Host Agent via a simple web UI (adapted from Project Pastra), primarily using voice input. They ask for the current price of a stock (e.g., *"What is the price of Microsoft?"*).
+The user interacts with the Host Agent via a simple web UI, primarily using voice input. They ask for the current price of a stock (e.g., *"What is the price of Microsoft?"*).
 
 **Execution Flow:**
 1.  **Input (ADK Live):** The frontend captures user audio and streams it via WebSocket to the ADK Live Server (app/live_server.py).
@@ -78,7 +76,7 @@ The user interacts with the Host Agent via a simple web UI (adapted from Project
 ### Prerequisites
 
 *   Python (>= 3.9 required by MCP, >= 3.11 recommended for latest ADK/async features)
-*   `pip` or `uv` (Python package installer)
+*   `pip` (Python package installer)
 *   Git
 *   Access to Google Cloud / Google AI Studio (for Gemini API Key/Credentials)
 *   An API key for a Gemini model supporting the Live API (e.g., `gemini-2.0-flash-exp`).
@@ -101,46 +99,34 @@ The user interacts with the Host Agent via a simple web UI (adapted from Project
 3.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
-    # Or: uv install -r requirements.txt
     ```
-    *(Ensure `requirements.txt` includes `google-adk`, `uvicorn`, `fastapi`, `starlette`, `websockets`, `python-dotenv`, `mcp[cli]`, `yfinance`, `httpx`, `pyaudio`)*
-4.  **Copy A2A Common Library:** Ensure the `common/` directory containing the A2A client/server base code is present in the project root.
+
 
 ### Configuration (`.env`)
 
-Create a `.env` file in the project root (`live-agent-project/`) and populate it with the correct values:
+1.  **Copy the Example:** In the project root, copy the `.env.example` file to a new file named `.env`.
+    ```bash
+    cp .env.example .env
+    ```
+2.  **Edit `.env`:** Open the newly created `.env` file and populate it with your specific configuration values. Refer to the comments within `.env.example` (and replicated below) for guidance on each variable.
 
-```dotenv
-# Google Cloud/Gemini Configuration
-# Option 1: Google AI Studio Key (Requires GOOGLE_GENAI_USE_VERTEXAI=FALSE or not set)
-GOOGLE_API_KEY=YOUR_GOOGLE_AI_STUDIO_API_KEY
-# Option 2: Vertex AI (Requires GOOGLE_GENAI_USE_VERTEXAI=TRUE and ADC login)
-# GOOGLE_GENAI_USE_VERTEXAI=TRUE
-# PROJECT_ID=your-gcp-project-id
-# VERTEX_LOCATION=us-central1
+Key variables you will need to set:
+*   `GOOGLE_GENAI_USE_VERTEXAI`: **Mandatory.** Must be set to `"True"` or `"False"` to determine the API authentication method.
+*   If `GOOGLE_GENAI_USE_VERTEXAI="False"` (for Google AI Studio):
+    *   `GOOGLE_API_KEY`: **Mandatory.** Your API key for Google AI Studio.
+*   If `GOOGLE_GENAI_USE_VERTEXAI="True"` (for Vertex AI):
+    *   `GOOGLE_CLOUD_PROJECT`: **Mandatory.** Your Google Cloud Project ID.
+    *   `GOOGLE_CLOUD_LOCATION`: **Mandatory.** Your Google Cloud Project Location (e.g., `us-central1`).
+*   `LIVE_SERVER_MODEL`: **Highly Recommended.** Specifies the Live API compatible model for the Host Agent. Defaults to "gemini-2.0-flash-live-001" if not set. Ensure the chosen model (either default or custom) is available and appropriate for your setup.
+*   `LIVE_SERVER_HOST`: **Mandatory.** Host for the ADK Live Server (e.g., `127.0.0.1`). Essential for the UI to connect.
+*   `LIVE_SERVER_PORT`: **Mandatory.** Port for the ADK Live Server (e.g., `8000`).
+*   `STOCK_INFO_AGENT_A2A_SERVER_HOST`: **Mandatory** (e.g., `127.0.0.1`). Host for the Specialist Agent's A2A server.
+*   `STOCK_INFO_AGENT_A2A_SERVER_PORT`: **Mandatory** (e.g., `8001`). Port for the Specialist Agent's A2A server.
+*   `STOCK_INFO_AGENT_MODEL`: **Mandatory.** Model for the specialist agent (e.g., "gemini-2.0-flash-001").
+*   `STOCK_MCP_SERVER_PATH`: **Mandatory** (e.g., `mcp_servers/stock_mcp_server/server.py`). Path to the MCP server script.
+    *   *Note:* The specialist agent will make its `--mcp-server-path` CLI argument required if this variable is not set in the environment. The script also verifies that this path points to an existing file.
+*   `MOCK_STOCK_API`: Set to `"True"` or `"False"` to enable/disable the mock stock API (Default is `FALSE`).
 
-# --- IMPORTANT: Use a Live API compatible model ---
-GEMINI_LIVE_MODEL_ID=gemini-2.0-flash-exp # Or other compatible model
-
-# A2A Server Endpoint URL (Where StockInfoAgent listens)
-SPECIALIST_AGENT_A2A_URL=http://127.0.0.1:8001/a2a
-
-# MCP Server Path (Absolute path needed by Specialist Agent)
-# Replace with the actual absolute path on your system!
-STOCK_MCP_SERVER_PATH=/absolute/path/to/project-horizon/mcp_servers/stock_mcp_server/server.py
-
-# ADK Live Server Configuration (Frontend connects here)
-LIVE_SERVER_HOST=127.0.0.1
-LIVE_SERVER_PORT=8081 # Port for the ADK/WebSocket server
-
-# Specialist A2A Server Configuration
-SPECIALIST_SERVER_HOST=127.0.0.1
-SPECIALIST_SERVER_PORT=8001 # Port for the A2A server (MUST BE DIFFERENT from LIVE_SERVER_PORT)
-
-# Logging Level (Optional: DEBUG, INFO, WARNING, ERROR)
-LOG_LEVEL=INFO
-```
-**Get Absolute Path:** Use `pwd` (Linux/macOS) or `cd` (Windows) in the `mcp_servers/stock_mcp_server` directory to find the path, then append `/server.py`.
 
 ### Running the Demo
 
@@ -149,18 +135,16 @@ Execute the components in separate terminals from the project root directory (`l
 1.  **Terminal 1: Start Specialist Agent (A2A Server)**
     ```bash
     python -m specialist_agents.stock_info_agent
-    # Or: uvicorn specialist_agents.stock_info_agent.server:app --host $SPECIALIST_SERVER_HOST --port $SPECIALIST_SERVER_PORT --log-level $LOG_LEVEL
     ```
     *Verify it starts listening on the correct port (e.g., 8001) and uses the correct MCP server path.*
 
 2.  **Terminal 2: Start ADK Live Server**
     ```bash
     python -m app.live_server
-    # Or: uvicorn app.live_server:app --host $LIVE_SERVER_HOST --port $LIVE_SERVER_PORT --log-level $LOG_LEVEL
     ```
-    *Verify it starts listening on its port (e.g., 8081).*
+    *Verify it starts listening on its port (e.g., 8000).*
 
-3.  **Access UI:** Open your web browser to `http://<LIVE_SERVER_HOST>:<LIVE_SERVER_PORT>` (e.g., `http://127.0.0.1:8081`).
+3.  **Access UI:** Open your web browser to `http://<LIVE_SERVER_HOST>:<LIVE_SERVER_PORT>` (e.g., `http://127.0.0.1:8000`).
 
 4.  **Interact:**
     *   Click "Connect".
@@ -169,44 +153,6 @@ Execute the components in separate terminals from the project root directory (`l
     *   Listen for the audio response.
     *   Check the logs in both terminals to see the A2A and MCP interactions.
     *   Click "Stop" in the UI when finished.
-
-## Project Structure
-```
-live-agent-project/
-├── host_agent/ # ADK Host Agent (User Facing, Live API)
-│ ├── init.py
-│ ├── agent.py # ADK Agent definition, instructions, A2A tool config
-│ └── tools.py # Custom ADK FunctionTool acting as A2A Client
-├── app/ # ADK Live Server and Frontend UI
-│ ├── static/ # Simplified Pastra UI files (HTML, CSS, JS)
-│ │ ├── index.html
-│ │ ├── styles.css
-│ │ └── adk-websocket-api.js
-│ │ └── audio/ # (Copied from Pastra)
-│ │ └── utils/ # (Copied from Pastra)
-│ └── live_server.py # FastAPI/WebSocket server bridging UI and ADK Runner
-├── common/ # Copied A2A protocol library code (client/server bases)
-│ ├── client/
-│ ├── server/
-│ └── types.py # A2A Pydantic models
-├── mcp_servers/ # MCP Tool Servers
-│ └── stock_mcp_server/ # Stock Price Tool Server
-│ ├── init.py
-│ └── server.py # FastMCP server using yfinance (stdio)
-├── specialist_agents/ # Backend agents communicating via A2A
-│ └── stock_info_agent/ # Stock Information Specialist Agent
-│ ├── init.py
-│ ├── main.py # Entry point to run the A2A server
-│ ├── agent_card.json # A2A discovery file (loaded by main)
-│ ├── mcp_client_logic.py # Logic acting as MCP Client (stdio)
-│ ├── server.py # A2A Server implementation (Starlette/common)
-│ └── task_manager.py # A2A Task handling logic
-├── tests/ # Unit and Integration Tests
-│ └── test_a2a_stock_client.py # Script to test A2A server directly
-├── .env # Environment variables (API Keys, URLs, Ports)
-├── requirements.txt # Python dependencies
-└── README.md # This file
-```
 
 
 ## Future Plans / Roadmap
