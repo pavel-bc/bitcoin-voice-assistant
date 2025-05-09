@@ -132,9 +132,7 @@ async def delegate_task_to_specialist(
 
     try:
         a2a_response = await a2a_client.send_task(task_params.model_dump())
-        # ... (rest of the A2A response processing logic from your original tool)
-        # Ensure you extract the relevant data from task_result.artifacts
-        # and return it in a consistent {"status": "success/error", ...} format.
+
         if a2a_response.error:
             error_msg = f"A2A protocol error from '{specialist_agent_name}': {a2a_response.error.message} (Code: {a2a_response.error.code})"
             logger.error(f"ADK Tool: {error_msg}")
@@ -178,7 +176,6 @@ async def delegate_task_to_specialist(
     except A2AClientHTTPError as http_err:
          logger.error(f"ADK Tool: HTTP Error calling specialist agent '{specialist_agent_name}': {http_err.status_code} - {http_err.message}", exc_info=True)
          return {"status": "error", "message": f"Network error with '{specialist_agent_name}': {http_err.status_code}", "specialist_name": specialist_agent_name}
-    # ... (other exception handling as before, adding specialist_agent_name to error messages)
     except Exception as e:
         logger.error(f"ADK Tool: Unexpected error during A2A call to '{specialist_agent_name}': {e}", exc_info=True)
         return {"status": "error", "message": f"An unexpected error occurred with '{specialist_agent_name}': {str(e)}", "specialist_name": specialist_agent_name}
