@@ -36,45 +36,63 @@ logging.basicConfig(level=os.getenv('LOG_LEVEL', 'INFO').upper(),
                    format='%(asctime)s - %(name)s - %(levelname)s - LIVE_SERVER - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- Import the Host Agent ---
+# --- Import the Host Agent CREATION FUNCTION ---
 try:
-    # Add project root to path to find host_agent package
     project_root = Path(__file__).parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
-        logger.debug(f"Added project root to sys.path: {project_root}")
-
-    from host_agent.agent import host_agent # Now this should work
-    logger.info("Successfully imported host_agent.")
+    from host_agent.agent import create_host_agent
+    logger.info("Successfully imported host_agent creation function.")
 except ImportError as e:
-     # Be specific about the import error
-     logger.critical(f"Could not import host_agent: {e}. Check sys.path and ensure host_agent/agent.py exists and is correct.", exc_info=True)
-     host_agent = None
-except Exception as e:
-    logger.critical(f"An unexpected error occurred importing host_agent: {e}", exc_info=True)
-    host_agent = None
+     logger.critical(f"Could not import host_agent.agent: {e}. Check sys.path and ensure host_agent/agent.py exists.", exc_info=True)
+     create_host_agent = None # type: ignore
 
-# Ensure host_agent was loaded
-if not host_agent:
-    logger.critical("Host agent failed to load. Exiting.")
-    sys.exit(1) # Exit if the core agent is missing
+if not create_host_agent:
+    logger.critical("Host agent creation function failed to load. Exiting.")
+    sys.exit(1)
 
-APP_NAME = "ProjectHorizonLive" # Consistent app name
+APP_NAME = "ProjectHorizonLive"
 STATIC_DIR = Path(__file__).parent / "static"
 
 # --- ADK Setup ---
 session_service = InMemorySessionService()
-runner = Runner(
-    app_name=APP_NAME,
-    agent=host_agent,
-    session_service=session_service,
-    # artifact_service=..., # Add if needed
-    # memory_service=..., # Add if needed
-)
-logger.info(f"ADK Runner initialized for agent: {host_agent.name}")
+runner: Optional[Runner] = None # Initialize as None
 
 # --- FastAPI App ---
-app = FastAPI(title="Project Horizon Live Server")
+app = FastAPI(title="Project Horizon Live Server") # Create app instance early
+
+async def initialize_adk_system():
+    """Initializes the ADK system, including specialist agent discovery and HostAgent creation."""
+    global runner
+
+    if not create_host_agent:
+        logger.critical("create_host_agent function not available. Cannot initialize ADK system.")
+        # This should ideally prevent server from starting, but with FastAPI events,
+        # we'll log critical and the app might fail to handle requests properly.
+        return
+
+    temp_host_agent = await create_host_agent()
+    if not temp_host_agent:
+        logger.critical("Failed to create HostAgent after discovery.")
+        return
+    
+    runner = Runner(
+        app_name=APP_NAME,
+        agent=temp_host_agent,
+        session_service=session_service,
+    )
+    logger.info(f"ADK Runner initialized with dynamically configured agent: {temp_host_agent.name}")
+
+# --- FastAPI Startup Event ---
+@app.on_event("startup")
+async def startup_event():
+    logger.info("FastAPI server starting up...")
+    await initialize_adk_system()
+    if not runner:
+        logger.critical("ADK Runner failed to initialize during startup. Server might not function correctly.")
+    else:
+        logger.info("ADK System initialized successfully within FastAPI startup.")
+
 
 # --- WebSocket Endpoint ---
 @app.websocket("/ws/{session_id}")
@@ -82,144 +100,94 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     """Handles WebSocket connection for live agent interaction."""
     await websocket.accept()
     logger.info(f"WebSocket client connected for session: {session_id}")
-    # Create a unique user ID based on session for this example
     user_id = f"live_user_{session_id}"
 
-    live_events: Optional[asyncio.StreamReader] = None # Define types for clarity
+    live_events: Optional[asyncio.StreamReader] = None
     live_request_queue: Optional[LiveRequestQueue] = None
     adk_run_task: Optional[asyncio.Task] = None
     client_listener_task: Optional[asyncio.Task] = None
-    session: Optional[Session] = None # Define session in the broader scope
+    adk_session: Optional[Session] = None
+
+    if not runner:
+        logger.error(f"Runner not initialized for session {session_id}. Aborting WebSocket connection.")
+        await websocket.close(code=1011, reason="Server not ready (Runner missing)")
+        return
 
     try:
-        # --- Create or Get ADK Session ---
-        # Use **keyword arguments**
-        session = session_service.get_session(
+        adk_session = session_service.get_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id
         )
-        if not session:
-            session = session_service.create_session(
+        if not adk_session:
+            adk_session = session_service.create_session(
                 app_name=APP_NAME, user_id=user_id, session_id=session_id, state={}
             )
             logger.info(f"Created new ADK session: {session_id}")
         else:
              logger.info(f"Resumed existing ADK session: {session_id}")
 
-        # --- Setup ADK Live Run ---
         live_request_queue = LiveRequestQueue()
-        # Configure run for audio output
         run_config = RunConfig(response_modalities=["AUDIO"])
-        # Start the agent's live execution loop in the background
-        live_events = runner.run_live(
-            session=session,
+        live_events = runner.run_live( # type: ignore
+            session=adk_session,
             live_request_queue=live_request_queue,
             run_config=run_config,
         )
         logger.info(f"ADK run_live started for session {session_id}")
 
-        # --- Bridge Tasks ---
-
-        # Task: Listen to ADK events and send to WebSocket client
         async def adk_to_client():
-            nonlocal session # Allow read/write of outer scope session
+            nonlocal adk_session
             logger.debug(f"[{session_id}] ADK -> Client task started.")
-            audio_chunk_counter = 0 # Counter for audio chunks in this turn
+            audio_chunk_counter = 0
             try:
-                async for event in live_events:
-                    # --- DEBUG: Log raw event structure ---
+                async for event in live_events: # type: ignore
                     logger.debug(f"[{session_id}] Raw ADK Event Received: {event}")
-                    # You might also try: logger.debug(f"[{session_id}] Raw ADK Event Dir: {dir(event)}")
-                    # Or for more detail: logger.debug(f"[{session_id}] Raw ADK Event Vars: {vars(event)}")
-                    # --- END DEBUG ---
-                    # print(f"[{session_id}] ADK -> Client event: {event}")
                     message_to_send = None
-                    event_processed = False # Flag to track if we sent something for this event
-                    # print("Hello 1")
+                    event_processed = False
 
-                    # --- ADDED INTERRUPTION CHECK ---
-                    # Check if the event signals an interruption (attribute name might vary based on ADK Event structure)
-                    # Based on Pastra example, interruption might be on a specific part of the event payload.
-                    # Let's check if the event object itself has an 'interrupted' attribute for now.
                     if hasattr(event, 'interrupted') and event.interrupted:
                          logger.info(f"[{session_id}] Received interruption signal from ADK.")
-                         # --- SEND INTERRUPTION MESSAGE TO CLIENT ---
                          await websocket.send_json({"type": "interrupted"})
                          logger.info(f"[{session_id}] Sent 'interrupted' signal to client.")
-                         # --- END SEND INTERRUPTION MESSAGE ---
-                         # Optionally break or return here if no further processing needed for interrupted events
-                         # continue # Example: Skip further processing for this event
-                    # --- END ADDED INTERRUPTION CHECK ---
 
-                    # --- Process Different Event Payloads ---
-
-                    # 1. Check for final textual response
-                    # if event.is_final_response() and event.content and event.content.parts:
-                    #      print("TEXT")
-                    #      part = event.content.parts[0]
-                    #      if part.text is not None: # Check for text part
-                    #          message_to_send = {"type": "text", "data": part.text}
-                    #          logger.info(f"[{session_id}] Sending final text to client: '{part.text[:50]}...'") # Log text start
-                    #          await websocket.send_json(message_to_send)
-                    #          event_processed = True
-                         # Add elif blocks here if final response could be other types (e.g., final image)
-
-                    # 2. Check for streaming audio
                     if event.content and event.content.parts:
-                        #  print("AUDIO")
                          part = event.content.parts[0]
                          if part.inline_data and part.inline_data.mime_type.startswith("audio/"):
                               audio_bytes = part.inline_data.data
                               audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
                               message_to_send = {"type": "audio", "data": audio_b64}
-
-                              # --- ADDED AUDIO LOGGING ---
                               audio_chunk_counter += 1
                               if audio_chunk_counter == 1:
                                   logger.info(f"[{session_id}] Receiving audio stream from ADK...")
-                              # Log periodically or just the first chunk to avoid flooding
                               logger.debug(f"[{session_id}] Sending audio chunk #{audio_chunk_counter} ({len(audio_bytes)} bytes) to client.")
-                              # --- END ADDED LOGGING ---
-
                               await websocket.send_json(message_to_send)
                               event_processed = True
-                    # else:
-                    #     print("NOTHING")    
 
-                    # 3. Check for turn completion signal (always send if present)
                     if event.turn_complete:
-                        # --- ADDED AUDIO LOGGING ---
                         if audio_chunk_counter > 0:
                             logger.info(f"[{session_id}] Finished sending {audio_chunk_counter} audio chunks.")
-                        audio_chunk_counter = 0 # Reset counter for next turn
-                        # --- END ADDED LOGGING ---
+                        audio_chunk_counter = 0
                         await websocket.send_json({"type": "turn_complete"})
                         logger.info(f"[{session_id}] Sent turn_complete signal to client.")
-                        event_processed = True # Mark as processed even if content was also sent
+                        event_processed = True
 
-                    # Log skipped events
-                    if not event_processed and not event.actions: # Avoid logging pure action events unless debugging actions specifically
-                        # Log events that weren't audio/final text/turn complete
-                        # Check if it's a tool call/response event before logging as "Skipping"
+                    if not event_processed and not event.actions:
                         is_tool_event = bool(event.get_function_calls() or event.get_function_responses())
                         if not is_tool_event:
                              logger.debug(f"[{session_id}] Skipping event: Author={event.author}, Partial={event.partial}, Content Type={type(event.content.parts[0]).__name__ if event.content and event.content.parts else 'None'}")
                         else:
-                            # Log tool calls/responses if needed for debugging the flow
                              if event.get_function_calls():
                                  logger.debug(f"[{session_id}] Processing event: Tool Call Requested by {event.author}")
                              elif event.get_function_responses():
                                  logger.debug(f"[{session_id}] Processing event: Tool Response from {event.author}")
 
-
-                    # --- Apply State/Artifact Deltas ---
-                    # Use the session_service to ensure proper handling (incl. persistence if needed)
                     if event.actions and (event.actions.state_delta or event.actions.artifact_delta):
                         logger.debug(f"[{session_id}] Appending event with actions: {event.actions}")
-                        session_service.append_event(session, event)
-                        # Reload session object to reflect committed changes locally
-                        session = session_service.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
-                        logger.debug(f"[{session_id}] Session state possibly updated by event actions.")
-
+                        if adk_session:
+                            session_service.append_event(adk_session, event)
+                            adk_session = session_service.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id) # type: ignore
+                            logger.debug(f"[{session_id}] Session state possibly updated by event actions.")
+                        else:
+                            logger.warning(f"[{session_id}] adk_session is None, cannot append event actions.")
             except WebSocketDisconnect:
                  logger.info(f"[{session_id}] WebSocket disconnected during ADK event processing.")
             except asyncio.CancelledError:
@@ -229,10 +197,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             finally:
                  logger.debug(f"[{session_id}] ADK -> Client task finished.")
 
-
-        # Task: Listen to WebSocket client messages and send to ADK
         async def client_to_adk():
-            nonlocal session # Allow read/write of outer scope session
+            nonlocal adk_session
             logger.debug(f"[{session_id}] Client -> ADK task started.")
             try:
                 while True:
@@ -246,8 +212,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             audio_bytes = base64.b64decode(audio_b64)
                             if audio_bytes:
                                 audio_blob = genai_types.Blob(mime_type='audio/pcm', data=audio_bytes)
-                                # Use send_realtime for blobs
-                                live_request_queue.send_realtime(blob=audio_blob)
+                                if live_request_queue: live_request_queue.send_realtime(blob=audio_blob)
                             else:
                                 logger.warning(f"[{session_id}] Received empty audio data from client.")
                     elif message_type == "text":
@@ -255,45 +220,40 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         if text_data:
                             logger.info(f"[{session_id}] Sending text '{text_data}' to ADK.")
                             content = genai_types.Content(role='user', parts=[genai_types.Part(text=text_data)])
-                            # Use send_content for structured Content
-                            live_request_queue.send_content(content=content)
+                            if live_request_queue: live_request_queue.send_content(content=content)
                     elif message_type == "end_of_turn":
                         logger.info(f"[{session_id}] Client indicated end of turn.")
-                        # No direct method, let Gemini API infer turn end
                         logger.debug(f"[{session_id}] End of turn signal received, letting Gemini API infer turn end.")
                     elif message_type == "toggle_mock":
                          mock_value = data.get("value", False)
                          logger.info(f"[{session_id}] Setting mock_a2a_calls state to: {mock_value}")
-                         # Create an event to signal the state change
                          state_update_event = Event(
-                             author="ui_control", # Identify source
+                             author="ui_control",
                              invocation_id = f"ui_mock_toggle_{uuid.uuid4().hex[:8]}",
                              actions=EventActions(
                                  state_delta={'mock_a2a_calls': mock_value}
                              )
-                             # No content needed for this system event
                          )
-                         # Use the service to append the event, which updates the state
-                         session_service.append_event(session, state_update_event)
-                         # Reload session object to see the change immediately in this context
-                         session = session_service.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
-                         logger.info(f"[{session_id}] State 'mock_a2a_calls' updated via event to: {session.state.get('mock_a2a_calls')}")
+                         if adk_session:
+                             session_service.append_event(adk_session, state_update_event)
+                             adk_session = session_service.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id) # type: ignore
+                             logger.info(f"[{session_id}] State 'mock_a2a_calls' updated via event to: {adk_session.state.get('mock_a2a_calls')}") # type: ignore
+                         else:
+                             logger.warning(f"[{session_id}] adk_session is None, cannot update mock_a2a_calls state.")
                     else:
                          logger.warning(f"[{session_id}] Received unknown message type from client: {message_type}")
 
             except WebSocketDisconnect:
                 logger.info(f"[{session_id}] Client WebSocket disconnected (detected in listener).")
-                if live_request_queue: live_request_queue.close() # Signal ADK runner
+                if live_request_queue: live_request_queue.close()
             except asyncio.CancelledError:
                  logger.info(f"[{session_id}] Client -> ADK task cancelled.")
             except Exception as e_inner:
                 logger.error(f"[{session_id}] Error in client listener task: {e_inner}", exc_info=True)
-                if live_request_queue: live_request_queue.close() # Close queue on error
+                if live_request_queue: live_request_queue.close()
             finally:
                 logger.debug(f"[{session_id}] Client -> ADK task finished.")
 
-
-        # Run bridge tasks concurrently and wait for the first one to finish
         logger.info(f"[{session_id}] Starting ADK <-> WebSocket bridge tasks.")
         adk_run_task = asyncio.create_task(adk_to_client())
         client_listener_task = asyncio.create_task(client_to_adk())
@@ -303,37 +263,31 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         )
         logger.info(f"[{session_id}] One of the bridge tasks completed ({len(done)} done, {len(pending)} pending).")
 
-        # Cancel any tasks that are still pending
         for task in pending:
             if not task.done():
                 logger.debug(f"[{session_id}] Cancelling pending bridge task...")
                 task.cancel()
                 with suppress(asyncio.CancelledError): await task
 
-    # --- Outer Exception Handling and Cleanup ---
     except WebSocketDisconnect:
         logger.info(f"WebSocket client disconnected gracefully for session: {session_id}")
     except asyncio.CancelledError:
          logger.info(f"WebSocket endpoint task cancelled for session: {session_id}")
     except Exception as e_outer:
         logger.error(f"Unhandled error in WebSocket endpoint for session {session_id}: {e_outer}", exc_info=True)
-        # Attempt to notify client of the error if socket is still open-ish
         with suppress(Exception):
             await websocket.close(code=1011, reason=f"Internal Server Error: {type(e_outer).__name__}")
     finally:
         logger.info(f"Performing final cleanup for session: {session_id}")
-        # Attempt to close the queue if it exists
         if live_request_queue:
              logger.debug(f"[{session_id}] Closing live request queue in final cleanup.")
              try:
                  live_request_queue.close()
              except Exception as q_close_err:
                  logger.warning(f"[{session_id}] Error closing LiveRequestQueue: {q_close_err}")
-        # Cancel tasks again for safety
         if adk_run_task and not adk_run_task.done(): adk_run_task.cancel()
         if client_listener_task and not client_listener_task.done(): client_listener_task.cancel()
-        # Optional: Remove session from memory on disconnect
-        if session:
+        if adk_session:
             try:
                 session_service.delete_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
                 logger.info(f"Session removed from service: {session_id}")
@@ -351,7 +305,6 @@ else:
 
     @app.get("/")
     async def read_index():
-        """Serves the main index.html file."""
         index_path = STATIC_DIR / "index.html"
         if not index_path.is_file():
             logger.error("index.html not found in static directory.")
@@ -360,49 +313,44 @@ else:
         return FileResponse(str(index_path))
 
 # --- Server Startup (for running directly) ---
+# The `main_async_startup` is now only needed if you run this file directly.
+# Uvicorn will handle app creation and startup events when run as `uvicorn app.live_server:app`
 if __name__ == "__main__":
-    # Ensure project root is in path if needed
-    project_root = Path(__file__).parent.parent
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
-        logger.debug(f"Added project root to sys.path for direct execution: {project_root}")
-
-    # --- Environment Variable Loading & Validation ---
-    # Load .env file from the project root if it exists
-    # Assuming a logger 'logger' and 'sys' module are already imported and configured earlier in the file.
+    project_root_path = Path(__file__).parent.parent
+    if str(project_root_path) not in sys.path:
+        sys.path.insert(0, str(project_root_path))
+        logger.debug(f"Added project root to sys.path for direct execution: {project_root_path}")
 
     LIVE_SERVER_MODEL_ID = os.getenv("LIVE_SERVER_MODEL")
     if not LIVE_SERVER_MODEL_ID:
-        logger.warning(
-            "LIVE_SERVER_MODEL environment variable not set. Using default 'gemini-2.0-flash-live-001'."
-        )
-        LIVE_SERVER_MODEL_ID = "gemini-2.0-flash-live-001"
+        logger.warning("LIVE_SERVER_MODEL env var not set. Defaulting to 'gemini-2.0-flash-exp'.")
+        LIVE_SERVER_MODEL_ID = "gemini-2.0-flash-exp"
 
     LIVE_SERVER_HOST = os.getenv("LIVE_SERVER_HOST")
     if LIVE_SERVER_HOST is None:
-        logger.critical(
-            "CRITICAL: LIVE_SERVER_HOST environment variable not set. This is a required variable."
-        )
+        logger.critical("CRITICAL: LIVE_SERVER_HOST env var not set.")
         sys.exit(1)
 
     raw_port = os.getenv("LIVE_SERVER_PORT")
     if raw_port is None:
-        logger.critical("LIVE_SERVER_PORT is not set in the environment variables or .env file. This is a required setting.")
+        logger.critical("LIVE_SERVER_PORT env var not set.")
         sys.exit(1)
     
     try:
         LIVE_SERVER_PORT = int(raw_port)
     except ValueError:
-        logger.critical(f"Invalid LIVE_SERVER_PORT: '{raw_port}'. Port must be an integer.")
+        logger.critical(f"Invalid LIVE_SERVER_PORT: '{raw_port}'. Must be integer.")
         sys.exit(1)
-    # --- End LIVE_SERVER_PORT check ---
 
-    logger.info(f"Starting Project Horizon Live Server on http://{LIVE_SERVER_HOST}:{LIVE_SERVER_PORT}")
+    # When running directly, we need to manually trigger the startup event logic
+    # (or Uvicorn does it if 'app' object is passed)
+    # Uvicorn will call startup events registered on the app object.
+    # No need to call initialize_adk_system() directly here if Uvicorn is used.
+    logger.info(f"Starting Project Horizon Live Server (direct run) on http://{LIVE_SERVER_HOST}:{LIVE_SERVER_PORT}")
     try:
         import uvicorn
-        # Use string format for app location as recommended by uvicorn
-        uvicorn.run("app.live_server:app", host=LIVE_SERVER_HOST, port=LIVE_SERVER_PORT, log_level="info") # Set uvicorn log level
+        uvicorn.run(app, host=LIVE_SERVER_HOST, port=LIVE_SERVER_PORT, log_level="info")
     except ImportError:
-         logger.critical("Uvicorn not installed. Run 'pip install uvicorn'.")
+         logger.critical("Uvicorn not installed. Run 'pip install uvicorn[standard]'.")
     except Exception as startup_error:
          logger.critical(f"Failed to start Uvicorn server: {startup_error}", exc_info=True)
