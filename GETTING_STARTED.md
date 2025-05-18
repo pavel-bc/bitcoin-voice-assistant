@@ -4,7 +4,7 @@ This guide provides detailed instructions on how to set up, run, and test the va
 
 ## 1. Running and Testing the Stock MCP Server
 
-The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price information using the `yfinance` library. It communicates using the Model Context Protocol (MCP) over standard input/output (stdio).
+The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price information using the `finnhub` library (previously used `yfinance`). It communicates using the Model Context Protocol (MCP) over standard input/output (stdio).
 
 ### Prerequisites
 
@@ -14,6 +14,9 @@ The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price
     source .venv/bin/activate  # Linux/macOS
     # .venv\Scripts\activate  # Windows
     ```
+*   **Finnhub API Key (Optional but Recommended):** To get real stock data, you'll need a Finnhub API key. If not provided, the server will use mock data.
+    * Register for a free API key at [Finnhub.io](https://finnhub.io/)
+    * Add the key to your `.env` file: `FINNHUB_API_KEY=your_api_key_here`
 
 ### A. Running the Stock MCP Server Independently
 
@@ -112,6 +115,7 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
     *   `STOCK_INFO_AGENT_A2A_SERVER_PORT`: The port the A2A server will listen on (e.g., `8001`).
     *   `STOCK_INFO_AGENT_MODEL`: The Gemini model to be used by the ADK agent within the specialist (e.g., `gemini-1.0-pro`).
     *   `STOCK_MCP_SERVER_PATH`: The relative path to the Stock MCP Server script (e.g., `mcp_servers/stock_mcp_server/server.py`), which this agent will run as a subprocess.
+    *   `FINNHUB_API_KEY`: (Optional but recommended) Your Finnhub API key for real stock data. If not provided, mock data will be used.
     *   `GOOGLE_GENAI_USE_VERTEXAI`, and either `GOOGLE_API_KEY` (if `False`) or `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` (if `True`): For authenticating with the Gemini API for the internal ADK agent.
     *   *(Refer to `.env.example` for the full list and descriptions.)*
 *   **MCP Server Not Running Separately:** You do not need to run the `StockToolServer` (from Section 1) independently. The `StockInfoAgent` will start it automatically as a subprocess.
@@ -281,7 +285,7 @@ For a more functional test that simulates sending a task to the `StockInfoAgent`
     ```
     If the agent is not running or there's an issue, the script will output error messages (e.g., connection refused, HTTP error, task failed).
 
-    This test confirms that the `StockInfoAgent` can receive tasks, process them (which involves its internal ADK agent calling the MCP server), and return results as A2A artifacts.
+    **Note on Mock Data:** If you haven't provided a Finnhub API key in your `.env` file, the tool will return mock data (price: 123.45). This is useful for testing without an API key, but not for production use.
 
 4.  **Stopping the Specialist Agent:**
     *   Go back to the terminal where the `StockInfoAgent` is running and press `Ctrl+C`.
