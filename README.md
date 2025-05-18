@@ -84,6 +84,8 @@ The user interacts with the Host Agent via a simple web UI, primarily using voic
 
 ## Getting Started
 
+For detailed setup, execution, and testing instructions for each component, please refer to the comprehensive [Getting Started Guide](./GETTING_STARTED.md).
+
 ### Prerequisites
 
 *   Python (>= 3.9 required by MCP, >= 3.11 recommended for latest ADK/async features)
