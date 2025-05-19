@@ -10,8 +10,8 @@ from google.adk.tools import ToolContext, FunctionTool
 
 # A2A Imports
 try:
-    from common.client import A2AClient, A2ACardResolver # Added A2ACardResolver
-    from common.types import (
+    from common_impl.client import A2AClient, A2ACardResolver # Added A2ACardResolver
+    from common_impl.types import (
         TaskSendParams, Message, TextPart, TaskState, DataPart,
         A2AClientHTTPError, A2AClientJSONError, AgentCard # Added AgentCard
     )

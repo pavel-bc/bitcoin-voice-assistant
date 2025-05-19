@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide provides detailed instructions on how to set up, run, and test the various components of Project Horizon.
+This guide provides detailed instructions on how to set up, run, and test the various components of this specific Project Horizon example: the Synchronous Stock Lookup.
 
 ## 1. Running and Testing the Stock MCP Server
 
@@ -8,7 +8,7 @@ The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price
 
 ### Prerequisites
 
-*   Ensure you have followed the main project [Installation steps](./README.md#installation) from the `README.md`, especially installing dependencies from `requirements.txt`. This will make the `mcp` command-line tools available.
+*   Ensure you have followed the main project [Installation steps](../README.md#overall-setup-for-this-example) from the example's main README.md located in this folder, especially installing dependencies from `requirements.txt`. This will make the `mcp` command-line tools available.
 *   Activate your Python virtual environment:
     ```bash
     source .venv/bin/activate  # Linux/macOS
@@ -16,15 +16,15 @@ The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price
     ```
 *   **Finnhub API Key (Optional but Recommended):** To get real stock data, you'll need a Finnhub API key. If not provided, the server will use mock data.
     * Register for a free API key at [Finnhub.io](https://finnhub.io/)
-    * Add the key to your `.env` file: `FINNHUB_API_KEY=your_api_key_here`
+    * Add the key to your `.env` file (located in this `examples/stock_lookup_custom_a2a/` directory): `FINNHUB_API_KEY=your_api_key_here`
 
 ### A. Running the Stock MCP Server Independently
 
 While the Specialist Agent normally starts this server as a subprocess, you can run it directly for testing or development.
 
-1.  **Navigate to the project root directory:**
+1.  **Navigate to the example directory:**
     ```bash
-    cd /path/to/your/project-horizon # Replace with your actual project path
+    *(This command assumes you are running from this example's directory: examples/stock_lookup_custom_a2a/)*
     ```
 2.  **Run the server script:**
     ```bash
@@ -39,7 +39,7 @@ The `mcp dev` command is the recommended way to test your Python-based MCP serve
 **Additional Prerequisites for `mcp dev` / `@modelcontextprotocol/inspector`:**
 *   **Node.js and npm/npx:** The `@modelcontextprotocol/inspector` is an npm package. `mcp dev` will typically handle its download via `npx` if it's not already available. Ensure you have Node.js installed, which includes npm (Node Package Manager) and npx (Node Package Execute).
 
-1.  **Open a terminal** in the project root directory, with your Python virtual environment activated.
+1.  **Open a terminal** in this example's directory (`examples/stock_lookup_custom_a2a/`), with your Python virtual environment activated.
 
 2.  **Run `mcp dev`:**
     Execute the following command, pointing to your MCP server script:
@@ -66,26 +66,26 @@ The `mcp dev` command is the recommended way to test your Python-based MCP serve
 3.  **Using the MCP Inspector Web UI:**
     *   Open the Inspector URL provided in your terminal (e.g., `http://127.0.0.1:6274`). The `mcp dev` command should automatically connect the Inspector to your running `StockToolServer`.
     *   **Initial Connection:**
-        *   Ideally, you'll be taken directly to a connected interface. However, if you were to encounter an initial screen asking you to manually configure the connection (similar to the image below), this would typically be for manual setups. With `mcp dev`, this screen (`assets/mcp-inspector-1.png`) should be bypassed.
+        *   Ideally, you'll be taken directly to a connected interface. However, if you were to encounter an initial screen asking you to manually configure the connection (similar to the image below), this would typically be for manual setups. With `mcp dev`, this screen (`../../assets/mcp-inspector-1.png`) should be bypassed.
 
             *Initial MCP Inspector Connection Screen (manual setup):*
-            [![MCP Inspector Initial Connection Screen](assets/mcp-inspector-1.png)](assets/mcp-inspector-1.png)
+            [![MCP Inspector Initial Connection Screen](../../assets/mcp-inspector-1.png)](../../assets/mcp-inspector-1.png)
 
     *   **Navigating the Connected Inspector:**
         *   Once connected, you'll see an interface with a connection pane on the left (showing server status, logs, and history) and main interaction tabs in the center.
-        *   The **Resources Tab** (shown below, `assets/mcp-inspector-2.png`) lists data resources from the server. For the `StockToolServer`, which mainly provides tools, this tab might not show much specific content but illustrates the general layout once connected. The "History" section at the bottom will show initialization calls.
+        *   The **Resources Tab** (shown below, `../../assets/mcp-inspector-2.png`) lists data resources from the server. For the `StockToolServer`, which mainly provides tools, this tab might not show much specific content but illustrates the general layout once connected. The "History" section at the bottom will show initialization calls.
 
             *MCP Inspector - Resources Tab (example of a connected view):*
-            [![MCP Inspector Resources Tab](assets/mcp-inspector-2.png)](assets/mcp-inspector-2.png)
+            [![MCP Inspector Resources Tab](../../assets/mcp-inspector-2.png)](../../assets/mcp-inspector-2.png)
 
         *   **Testing with the Tools Tab:**
             *   The primary tab for testing the `StockToolServer` is the **Tools Tab**.
             *   Select it, and you should see the `get_current_stock_price` tool listed.
-            *   Click on `get_current_stock_price`. You can then input a `ticker_symbol` (e.g., "AAPL") and click "Run Tool", as illustrated below (`assets/mcp-inspector-3.png`).
+            *   Click on `get_current_stock_price`. You can then input a `ticker_symbol` (e.g., "AAPL") and click "Run Tool", as illustrated below (`../../assets/mcp-inspector-3.png`).
             *   The results will appear in the "Tool Result" section, showing the JSON response from the server.
 
             *MCP Inspector - Tools Tab (calling get_current_stock_price and viewing results):*
-            [![MCP Inspector Tool Call and Result](assets/mcp-inspector-3.png)](assets/mcp-inspector-3.png)
+            [![MCP Inspector Tool Call and Result](../../assets/mcp-inspector-3.png)](../../assets/mcp-inspector-3.png)
 
     *   **Further Details:**
         *   The MCP Inspector has many other features for in-depth debugging and interaction with MCP servers, including detailed views for prompts, server notifications, and more.
@@ -110,11 +110,11 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
     source .venv/bin/activate  # Linux/macOS
     # .venv\Scripts\activate  # Windows
     ```
-*   **`.env` Configuration:** Your `.env` file in the project root must be correctly configured with the following key variables for the `StockInfoAgent`:
+*   **`.env` Configuration:** Your `.env` file in this example's directory (`examples/stock_lookup_custom_a2a/`) must be correctly configured with the following key variables for the `StockInfoAgent`:
     *   `STOCK_INFO_AGENT_A2A_SERVER_HOST`: The host address the A2A server will bind to (e.g., `127.0.0.1`).
     *   `STOCK_INFO_AGENT_A2A_SERVER_PORT`: The port the A2A server will listen on (e.g., `8001`).
     *   `STOCK_INFO_AGENT_MODEL`: The Gemini model to be used by the ADK agent within the specialist (e.g., `gemini-1.0-pro`).
-    *   `STOCK_MCP_SERVER_PATH`: The relative path to the Stock MCP Server script (e.g., `mcp_servers/stock_mcp_server/server.py`), which this agent will run as a subprocess.
+    *   `STOCK_MCP_SERVER_PATH`: The relative path to the Stock MCP Server script (e.g., `mcp_servers/stock_mcp_server/server.py` relative to this example's directory), which this agent will run as a subprocess.
     *   `FINNHUB_API_KEY`: (Optional but recommended) Your Finnhub API key for real stock data. If not provided, mock data will be used.
     *   `GOOGLE_GENAI_USE_VERTEXAI`, and either `GOOGLE_API_KEY` (if `False`) or `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` (if `True`): For authenticating with the Gemini API for the internal ADK agent.
     *   *(Refer to `.env.example` for the full list and descriptions.)*
@@ -122,7 +122,7 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
 
 ### A. Running the Specialist Agent
 
-1.  **Navigate to the project root directory** (if you aren't already there).
+1.  **Ensure you are in this example's directory** (`examples/stock_lookup_custom_a2a/`).
 2.  **Run the agent script:**
     ```bash
     python -m specialist_agents.stock_info_agent
@@ -135,7 +135,7 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
     INFO:__main__:  Host: 127.0.0.1
     INFO:__main__:  Port: 8001
     INFO:__main__:  MCP Server Script Path: mcp_servers/stock_mcp_server/server.py
-    INFO:specialist_agents.stock_info_agent.task_manager:StockInfoTaskManager initialized (ADK Runner Mode). Will use MCP server at: /path/to/your/project-horizon/mcp_servers/stock_mcp_server/server.py
+    INFO:specialist_agents.stock_info_agent.task_manager:StockInfoTaskManager initialized (ADK Runner Mode). Will use MCP server at: /path/to/your/project-horizon/examples/stock_lookup_custom_a2a/mcp_servers/stock_mcp_server/server.py
     INFO:uvicorn:Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
     ```
 
@@ -213,9 +213,9 @@ For a more functional test that simulates sending a task to the `StockInfoAgent`
 1.  **Initialization:** 
     *   Takes a stock ticker symbol (e.g., `GOOGL`) as a mandatory command-line argument.
     *   Optionally accepts `--url` for the `StockInfoAgent` (defaulting to `http://127.0.0.1:8001`) and a `--session` ID (a new one is generated if not provided).
-    *   It ensures the project root is in Python's `sys.path` to correctly import the `common` module.
+    *   It ensures this example's directory or necessary parent directories are in Python's `sys.path` to correctly import its local `common_impl` module.
 2.  **A2A Client Setup:** 
-    *   Creates an instance of `A2AClient` from `common.client.client`, configured to target the `StockInfoAgent`'s URL.
+    *   Creates an instance of `A2AClient` from this example's `common_impl.client.client`, configured to target the `StockInfoAgent`'s URL.
 3.  **Task Construction:**
     *   Generates a unique `task_id`.
     *   Constructs an A2A `TaskSendParams` object. This is the standard way to define a task in A2A. The payload includes:
@@ -248,7 +248,7 @@ For a more functional test that simulates sending a task to the `StockInfoAgent`
 **How to run it:**
 
 1.  Ensure the `StockInfoAgent` (from section 2.A) is running in a separate terminal.
-2.  **Open a new terminal** in the project root directory, with your Python virtual environment activated:
+2.  **Open a new terminal** in this example's directory (`examples/stock_lookup_custom_a2a/`), with your Python virtual environment activated:
     ```bash
     source .venv/bin/activate  # Linux/macOS
     # .venv\Scripts\activate  # Windows
@@ -308,7 +308,7 @@ This final section explains how to run the main ADK Live Server, which hosts the
         # .venv\Scripts\activate  # Windows
         ```
 3.  **`.env` Configuration:**
-    *   Your `.env` file in the project root must be correctly configured. Key variables for the ADK Live Server / Host Agent include:
+    *   Your `.env` file in this example's directory (`examples/stock_lookup_custom_a2a/`) must be correctly configured. Key variables for the ADK Live Server / Host Agent include:
         *   `LIVE_SERVER_HOST`: The host for the ADK Live Server (e.g., `127.0.0.1`).
         *   `LIVE_SERVER_PORT`: The port for the ADK Live Server (e.g., `8000`).
         *   `LIVE_SERVER_MODEL`: The Gemini model compatible with the Live API for the Host Agent (e.g., `gemini-1.5-flash-latest` or a specific Live-enabled version).
@@ -318,7 +318,7 @@ This final section explains how to run the main ADK Live Server, which hosts the
 
 ### A. Running the ADK Live Server (Host Agent)
 
-1.  **Navigate to the project root directory** (if you aren't already there).
+1.  **Ensure you are in this example's directory** (`examples/stock_lookup_custom_a2a/`).
 2.  **Run the Live Server script:**
     ```bash
     python -m app.live_server

@@ -1,5 +1,5 @@
 import httpx
-from common.types import (
+from common_impl.types import (
     AgentCard,
     A2AClientJSONError,
 )

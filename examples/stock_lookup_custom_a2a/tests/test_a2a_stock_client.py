@@ -14,8 +14,8 @@ import logging
 import json
 from typing import Optional
 
-from common.client import A2AClient
-from common.types import (
+from common_impl.client import A2AClient
+from common_impl.types import (
     TaskSendParams, Message, TextPart, SendTaskResponse, TaskState, Artifact,
     DataPart, A2AClientHTTPError, A2AClientJSONError
 )

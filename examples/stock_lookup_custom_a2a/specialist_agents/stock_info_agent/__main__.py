@@ -4,8 +4,8 @@ import click
 from dotenv import load_dotenv
 
 # A2A Imports from common library
-from common.server import A2AServer
-from common.types import AgentCard, AgentCapabilities, AgentSkill
+from common_impl.server import A2AServer
+from common_impl.types import AgentCard, AgentCapabilities, AgentSkill
 
 # Local Imports
 from .task_manager import StockInfoTaskManager

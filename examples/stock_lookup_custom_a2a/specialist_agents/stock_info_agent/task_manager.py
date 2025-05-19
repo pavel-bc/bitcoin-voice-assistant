@@ -8,8 +8,8 @@ from google.adk.runners import Runner # Import ADK Runner
 from google.adk.sessions import InMemorySessionService, Session # Need Session components
 from google.genai import types as genai_types # For Content/Part
 
-from common.server.task_manager import InMemoryTaskManager # Use the base class
-from common.types import (
+from common_impl.server.task_manager import InMemoryTaskManager # Use the base class
+from common_impl.types import (
     SendTaskRequest, SendTaskResponse, Task, TaskState, TaskStatus,
     Artifact, TextPart, DataPart, JSONRPCError, InternalError,
     SendTaskStreamingRequest, SendTaskStreamingResponse, # <--- Import these
