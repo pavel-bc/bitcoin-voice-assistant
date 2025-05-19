@@ -47,8 +47,6 @@ This repository contains a growing collection of example applications, each demo
 
 ## Getting Started
 
-Please refer to the [GETTING_STARTED.md](./GETTING_STARTED.md) guide for general prerequisites and an overview of how to run the examples.
-
 **Each example within the `examples/` directory has its own detailed `README.md` with specific setup and execution instructions.**
 
 ## Future Plans / Roadmap
