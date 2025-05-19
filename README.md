@@ -29,7 +29,7 @@ This project showcases and explores the integration of several key technologies:
 *   **[Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/)**: For building user-facing agents, orchestrating tasks, and managing multimodal communication.
 *   **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)**: Powers real-time, low-latency, bidirectional voice (and potentially video) interactions within ADK.
 *   **[Agent2Agent Protocol (A2A)](https://google.github.io/A2A/)**: An open standard for communication and task delegation between independent AI agents.
-    *   This repository includes examples using both a custom A2A implementation (for historical reference) and the official **[google-a2a-python SDK](https://github.com/google/a2a-python)**.
+    *   This repository includes examples using  a custom A2A implementation (for historical reference). An implementation with the  official **[google-a2a-python SDK](https://github.com/google/a2a-python)** is planned.
 *   **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)**: An open standard allowing agents to securely interact with dedicated "Tool Servers" that provide specific functionalities or data.
 
 ## Example Applications
@@ -43,11 +43,6 @@ This repository contains a growing collection of example applications, each demo
     *   **Description:** This is the original proof-of-concept demonstrating a real-time stock price lookup using ADK Live, a custom A2A implementation for delegation, and MCP over stdio for tool execution. It is preserved with its original dependencies for reproducibility.
     *   **Technologies:** ADK Live, Custom A2A, Custom MCP Client, yfinance.
 
-2.  **(Coming Soon) Asynchronous News Aggregator (Official A2A SDK)**
-    *   **Directory:** `examples/async-news-aggregator-sdk/` (Placeholder)
-    *   **Description:** Will demonstrate asynchronous task handling and communication using the official `a2a-sdk`.
-    *   **Technologies:** ADK Live (potentially), Official `a2a-sdk`, (Potential MCP usage).
-
 *More examples demonstrating various agent architectures and protocol features will be added over time.*
 
 ## Getting Started
@@ -60,6 +55,7 @@ Please refer to the [GETTING_STARTED.md](./GETTING_STARTED.md) guide for general
 
 This project establishes a foundation for exploring advanced multi-agent systems. Future iterations and new examples aim to explore:
 
+*   **A2A SDK:** Create an example with the officoal A2A Python SDK. 
 *   **Asynchronous A2A/MCP:** Implement non-blocking calls, leveraging A2A streaming or push notifications, especially for long-running tool operations within Specialist Agent -> MCP Server interactions using the official `a2a-sdk`.
 *   **Parallel A2A Delegation:** Modify Host Agents to delegate tasks to multiple Specialist Agents concurrently (e.g., fetch stock price AND company news simultaneously).
 *   **MCP over HTTP/SSE:** Explore MCP Tool Servers that use HTTP/SSE transport (instead of just stdio), requiring security considerations like authentication middleware.
