@@ -39,7 +39,7 @@ This repository contains a growing collection of example applications, each demo
 ### Available Examples:
 
 1.  **Synchronous Stock Lookup (Custom A2A/MCP Implementation)**
-    *   **Directory:** [`examples/stock-lookup-custom-a2a/`](./examples/stock-lookup-custom-a2a/)
+    *   **Directory:** [`examples/stock_lookup_custom_a2a/`](./examples/stock_lookup_custom_a2a/)
     *   **Description:** This is the original proof-of-concept demonstrating a real-time stock price lookup using ADK Live, a custom A2A implementation for delegation, and MCP over stdio for tool execution. It is preserved with its original dependencies for reproducibility.
     *   **Technologies:** ADK Live, Custom A2A, Custom MCP Client, Finnhup API.
 
