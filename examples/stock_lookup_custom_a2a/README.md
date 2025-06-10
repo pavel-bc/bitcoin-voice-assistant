@@ -75,7 +75,7 @@ The user interacts with the Host Agent via a simple web UI, primarily using voic
 1.  **Navigate to this Example Directory:**
     If you are at the root of the `project-horizon` repository, navigate here:
     ```bash
-    cd examples/sync-stock-lookup-custom-a2a
+    cd examples/stock_lookup_custom_a2a
     ```
 
 2.  **Set up Virtual Environment:**
