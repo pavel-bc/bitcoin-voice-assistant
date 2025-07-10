@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # --- Constants ---
-MODEL = os.getenv('BLOCKCHAIN_INFO_AGENT_MODEL', "gemini-1.5-flash")
+MODEL = os.getenv('BLOCKCHAIN_INFO_AGENT_MODEL', "gemini-2.0-flash-001")
 
 # --- MCP Tool Loading Function ---
 async def get_mcp_tools_async(mcp_server_script_path: str) -> tuple[list, AsyncExitStack]:

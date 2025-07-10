@@ -310,7 +310,7 @@ This final section explains how to run the main ADK Live Server, which hosts the
     *   Your `.env` file in this example's directory (`examples/stock_lookup_custom_a2a/`) must be correctly configured. Key variables for the ADK Live Server / Host Agent include:
         *   `LIVE_SERVER_HOST`: The host for the ADK Live Server (e.g., `127.0.0.1`).
         *   `LIVE_SERVER_PORT`: The port for the ADK Live Server (e.g., `8000`).
-        *   `LIVE_SERVER_MODEL`: The Gemini model compatible with the Live API for the Host Agent (e.g., `gemini-1.5-flash-latest` or a specific Live-enabled version).
+        *   `LIVE_SERVER_MODEL`: The Gemini model compatible with the Live API for the Host Agent (e.g., `gemini-2.0-flash-live-001` or a specific Live-enabled version).
         *   `SPECIALIST_AGENT_BASE_URLS`: **Crucial.** A comma-separated list of base URLs for all specialist A2A agents that the Host Agent should discover. For the `StockInfoAgent`, if it's running on `http://127.0.0.1:8001`, this list should include that URL (e.g., `SPECIALIST_AGENT_BASE_URLS=http://127.0.0.1:8001`).
         *   `GOOGLE_GENAI_USE_VERTEXAI`, and corresponding `GOOGLE_API_KEY` or Google Cloud project details: For the Host Agent's Gemini API access.
         *   *(Refer to `.env.example` for the full list and descriptions.)*

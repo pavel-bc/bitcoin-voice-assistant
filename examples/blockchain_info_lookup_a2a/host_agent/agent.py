@@ -22,7 +22,7 @@ except ImportError as e:
     initialize_specialist_agents_discovery = None
 
 logger = logging.getLogger(__name__)
-MODEL_ID_LIVE = os.getenv("LIVE_SERVER_MODEL", "gemini-1.5-flash-latest")
+MODEL_ID_LIVE = os.getenv("LIVE_SERVER_MODEL", "gemini-2.0-flash-live-001")
 
 def get_host_agent_instruction() -> str:
     base_instruction = (
