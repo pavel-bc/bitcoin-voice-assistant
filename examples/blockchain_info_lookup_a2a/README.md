@@ -42,9 +42,9 @@ The user interacts with the Host Agent via a simple web UI, primarily using voic
 2.  **Host Agent Processing (ADK):** `HostAgent` (Gemini Live model) processes input, identifies intent (stock lookup) and ticker (e.g., "MSFT").
 3.  **Tool Invocation (ADK -> Custom A2A Client):** `HostAgent` uses `delegate_task_to_specialist` tool with specialist name "StockInfoAgent" and "MSFT".
 4.  **Delegation (Custom A2A Request):** The tool (in `host_agent/tools.py`) acts as an A2A client, looks up "StockInfoAgent", gets its A2A endpoint from the discovered Agent Card, and sends an A2A task via HTTP POST to the `StockInfoAgent`.
-5.  **Task Reception (Custom A2A Server):** `StockInfoAgent` (`specialist_agents/stock_info_agent/__main__.py`), as an A2A Server, receives and parses the task.
-6.  **ADK Agent Execution (within A2A Server):** `StockInfoTaskManager` instantiates its ADK `stock_info_agent`. This involves launching the `StockToolServer` (`mcp_servers/stock_mcp_server/server.py`) as a subprocess (managed by `MCPToolset` from ADK).
-7.  **MCP Tool Call (via ADK Agent & Toolset):** The `stock_info_agent` uses its `get_current_stock_price` tool (loaded via MCP). The `MCPToolset` sends an MCP `tools/call` request to the `StockToolServer` subprocess via stdio.
+5.  **Task Reception (Custom A2A Server):** `StockInfoAgent` (`specialist_agents/blockchain_info_agent/__main__.py`), as an A2A Server, receives and parses the task.
+6.  **ADK Agent Execution (within A2A Server):** `StockInfoTaskManager` instantiates its ADK `blockchain_info_agent`. This involves launching the `StockToolServer` (`mcp_servers/stock_mcp_server/server.py`) as a subprocess (managed by `MCPToolset` from ADK).
+7.  **MCP Tool Call (via ADK Agent & Toolset):** The `blockchain_info_agent` uses its `get_current_stock_price` tool (loaded via MCP). The `MCPToolset` sends an MCP `tools/call` request to the `StockToolServer` subprocess via stdio.
 8.  **Tool Execution (MCP Server):** `StockToolServer` (FastMCP) receives the request, uses `yfinance` for stock data.
 9.  **MCP Response (stdio):** `StockToolServer` sends the result back via stdout.
 10. **ADK Agent Receives Tool Result:** `MCPToolset` gets the response. `StockInfoTaskManager` extracts the data. The `StockToolServer` subprocess is terminated.
@@ -98,16 +98,16 @@ The user interacts with the Host Agent via a simple web UI, primarily using voic
         cp .env.example .env
         ```
     *   Open the `.env` file and populate it with your specific configuration values (API keys, ports, etc.). Refer to the comments within `.env.example`.
-        *Key variables include `GOOGLE_API_KEY`, `LIVE_SERVER_PORT`, `STOCK_INFO_AGENT_A2A_SERVER_PORT`, `STOCK_MCP_SERVER_PATH`, `MOCK_STOCK_API`.*
+        *Key variables include `GOOGLE_API_KEY`, `LIVE_SERVER_PORT`, `BLOCKCHAIN_INFO_INFO_AGENT_A2A_SERVER_PORT`, `BLOCKCHAIN_MCP_SERVER_PATH`, `MOCK_STOCK_API`.*
 
 ### Running the Demo
 
 Execute the components in **separate terminals** from **this example's root directory** (`project-horizon/examples/sync-stock-lookup-custom-a2a/`), ensuring your virtual environment is active in each.
 
 1.  **Terminal 1: Start Specialist Agent (StockInfoAgent A2A Server)**
-    Ensure the `STOCK_MCP_SERVER_PATH` in your `.env` file is correctly set (e.g., `mcp_servers/stock_mcp_server/server.py` relative to this example's root, or an absolute path).
+    Ensure the `BLOCKCHAIN_MCP_SERVER_PATH` in your `.env` file is correctly set (e.g., `mcp_servers/stock_mcp_server/server.py` relative to this example's root, or an absolute path).
     ```bash
-    python -m specialist_agents.stock_info_agent
+    python -m specialist_agents.blockchain_info_agent
     ```
     *Verify it starts listening on the port defined in `.env` (e.g., 8001).*
 

@@ -111,11 +111,10 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
     # .venv\Scripts\activate  # Windows
     ```
 *   **`.env` Configuration:** Your `.env` file in this example's directory (`examples/stock_lookup_custom_a2a/`) must be correctly configured with the following key variables for the `StockInfoAgent`:
-    *   `STOCK_INFO_AGENT_A2A_SERVER_HOST`: The host address the A2A server will bind to (e.g., `127.0.0.1`).
-    *   `STOCK_INFO_AGENT_A2A_SERVER_PORT`: The port the A2A server will listen on (e.g., `8001`).
-    *   `STOCK_INFO_AGENT_MODEL`: The Gemini model to be used by the ADK agent within the specialist (e.g., `gemini-1.0-pro`).
-    *   `STOCK_MCP_SERVER_PATH`: The relative path to the Stock MCP Server script (e.g., `mcp_servers/stock_mcp_server/server.py` relative to this example's directory), which this agent will run as a subprocess.
-    *   `FINNHUB_API_KEY`: (Optional but recommended) Your Finnhub API key for real stock data. If not provided, mock data will be used.
+    *   `BLOCKCHAIN_INFO_AGENT_A2A_SERVER_HOST`: The host address the A2A server will bind to (e.g., `127.0.0.1`).
+    *   `BLOCKCHAIN_INFO_AGENT_A2A_SERVER_PORT`: The port the A2A server will listen on (e.g., `8001`).
+    *   `BLOCKCHAIN_INFO_AGENT_MODEL`: The Gemini model to be used by the ADK agent within the specialist (e.g., `gemini-1.0-pro`).
+    *   `BLOCKCHAIN_MCP_SERVER_PATH`: The relative path to the Stock MCP Server script (e.g., `mcp_servers/stock_mcp_server/server.py` relative to this example's directory), which this agent will run as a subprocess.
     *   `GOOGLE_GENAI_USE_VERTEXAI`, and either `GOOGLE_API_KEY` (if `False`) or `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` (if `True`): For authenticating with the Gemini API for the internal ADK agent.
     *   *(Refer to `.env.example` for the full list and descriptions.)*
 *   **MCP Server Not Running Separately:** You do not need to run the `StockToolServer` (from Section 1) independently. The `StockInfoAgent` will start it automatically as a subprocess.
@@ -125,7 +124,7 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
 1.  **Ensure you are in this example's directory** (`examples/stock_lookup_custom_a2a/`).
 2.  **Run the agent script:**
     ```bash
-    python -m specialist_agents.stock_info_agent
+    python -m specialist_agents.blockchain_info_agent
     ```
 3.  **Expected Output:**
     You should see log messages indicating the A2A server is starting, followed by confirmation that it's listening on the configured host and port. It will also typically log the initialization of its internal ADK agent and the launching of the `StockToolServer` subprocess.
@@ -135,7 +134,7 @@ The `StockInfoAgent` is a specialist agent responsible for handling stock inform
     INFO:__main__:  Host: 127.0.0.1
     INFO:__main__:  Port: 8001
     INFO:__main__:  MCP Server Script Path: mcp_servers/stock_mcp_server/server.py
-    INFO:specialist_agents.stock_info_agent.task_manager:StockInfoTaskManager initialized (ADK Runner Mode). Will use MCP server at: /path/to/your/project-horizon/examples/stock_lookup_custom_a2a/mcp_servers/stock_mcp_server/server.py
+    INFO:specialist_agents.blockchain_info_agent.task_manager:StockInfoTaskManager initialized (ADK Runner Mode). Will use MCP server at: /path/to/your/project-horizon/examples/stock_lookup_custom_a2a/mcp_servers/stock_mcp_server/server.py
     INFO:uvicorn:Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
     ```
 
@@ -152,7 +151,7 @@ The Agent Card provides metadata about the agent and its capabilities. It's loca
 1.  Ensure the `StockInfoAgent` (from section 2.A) is running in a separate terminal.
 2.  **Open your web browser**.
 3.  **Navigate to the Agent Card URL:**
-    Use the host and port configured in your `.env` file for `STOCK_INFO_AGENT_A2A_SERVER_HOST` and `STOCK_INFO_AGENT_A2A_SERVER_PORT`.
+    Use the host and port configured in your `.env` file for `BLOCKCHAIN_INFO_AGENT_A2A_SERVER_HOST` and `BLOCKCHAIN_INFO_AGENT_A2A_SERVER_PORT`.
     The standard path is `/.well-known/agent.json`.
     For example, if your agent is running on `http://127.0.0.1:8001`, the URL will be:
     ```
@@ -360,7 +359,7 @@ This final section explains how to run the main ADK Live Server, which hosts the
     *   Click the microphone icon again to stop recording and send the audio to the server.
 3.  **Observe the Result:**
     *   **Audio Response:** You should hear the Host Agent respond with the stock price information in a spoken voice.
-    *   **Terminal Logs:** Check the terminals where both the `app.live_server` (Host Agent) and `specialist_agents.stock_info_agent` (Specialist Agent) are running.
+    *   **Terminal Logs:** Check the terminals where both the `app.live_server` (Host Agent) and `specialist_agents.blockchain_info_agent` (Specialist Agent) are running.
         *   **Host Agent Logs:** You should see activity related to receiving your audio, transcribing it, the LLM deciding to use the `delegate_task_to_specialist` tool, the A2A request being sent to the `StockInfoAgent`, and the A2A response being received.
         *   **Specialist Agent Logs:** You should see it receiving an A2A task, logs from its internal ADK agent processing the request (which includes launching/communicating with its `StockToolServer` MCP subprocess), and sending the A2A task response back.
     This confirms the entire end-to-end flow: UI -> ADK Live Server (Host Agent) -> A2A -> Specialist Agent -> MCP -> `yfinance` -> MCP -> Specialist Agent -> A2A -> Host Agent -> UI (audio).
@@ -370,7 +369,7 @@ This final section explains how to run the main ADK Live Server, which hosts the
 1.  **Stop the ADK Live Server (Host Agent):**
     *   Go to the terminal where `app.live_server` is running and press `Ctrl+C`.
 2.  **Stop the Specialist Agent:**
-    *   If you are finished testing, go to the terminal where `specialist_agents.stock_info_agent` is running and press `Ctrl+C`. This will also stop the `StockToolServer` subprocess it was managing.
+    *   If you are finished testing, go to the terminal where `specialist_agents.blockchain_info_agent` is running and press `Ctrl+C`. This will also stop the `StockToolServer` subprocess it was managing.
 3.  **Stop the MCP Inspector (if running):**
     *   If you still have `mcp dev` (from Section 1) running in a terminal, press `Ctrl+C` there as well.
 
