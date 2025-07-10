@@ -1,5 +1,8 @@
 # Project Horizon
 
+> [!WARNING]
+> Majority of the code in this repository was generated using [Google Gemini 2.5 Pro](https://gemini.google.com)
+
 ## Exploring the Future of Interoperable, Multimodal AI Agent Systems
 
 ---
