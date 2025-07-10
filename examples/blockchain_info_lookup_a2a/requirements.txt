@@ -14,7 +14,6 @@ pydantic==2.11.3
 
 # MCP & Tools
 mcp[cli] @ git+https://github.com/modelcontextprotocol/python-sdk.git@b4c7db6a50a5c88bae1db5c1f7fba44d16eebc6e
-finnhub-python==2.4.23
 
 # Testing
 pytest==8.3.5

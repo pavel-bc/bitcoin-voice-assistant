@@ -4,8 +4,6 @@ This guide provides detailed instructions on how to set up, run, and test the va
 
 ## 1. Running and Testing the Stock MCP Server
 
-The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price information using the `finnhub` library (previously used `yfinance`). It communicates using the Model Context Protocol (MCP) over standard input/output (stdio).
-
 ### Prerequisites
 
 *   Ensure you have followed the main project [Installation steps](../README.md#overall-setup-for-this-example) from the example's main README.md located in this folder, especially installing dependencies from `requirements.txt`. This will make the `mcp` command-line tools available.
@@ -14,9 +12,6 @@ The Stock MCP Server (`StockToolServer`) is responsible for fetching stock price
     source .venv/bin/activate  # Linux/macOS
     # .venv\Scripts\activate  # Windows
     ```
-*   **Finnhub API Key (Optional but Recommended):** To get real stock data, you'll need a Finnhub API key. If not provided, the server will use mock data.
-    * Register for a free API key at [Finnhub.io](https://finnhub.io/)
-    * Add the key to your `.env` file (located in this `examples/stock_lookup_custom_a2a/` directory): `FINNHUB_API_KEY=your_api_key_here`
 
 ### A. Running the Stock MCP Server Independently
 
@@ -283,8 +278,6 @@ For a more functional test that simulates sending a task to the `StockInfoAgent`
     }
     ```
     If the agent is not running or there's an issue, the script will output error messages (e.g., connection refused, HTTP error, task failed).
-
-    **Note on Mock Data:** If you haven't provided a Finnhub API key in your `.env` file, the tool will return mock data (price: 123.45). This is useful for testing without an API key, but not for production use.
 
 4.  **Stopping the Specialist Agent:**
     *   Go back to the terminal where the `StockInfoAgent` is running and press `Ctrl+C`.
