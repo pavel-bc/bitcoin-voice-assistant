@@ -59,7 +59,7 @@ session_service = InMemorySessionService()
 runner: Optional[Runner] = None # Initialize as None
 
 # --- FastAPI App ---
-app = FastAPI(title="Project Horizon Live Server") # Create app instance early
+app = FastAPI(title="Bitcoin Voice Assistant") # Create app instance early
 
 async def initialize_adk_system():
     """Initializes the ADK system, including specialist agent discovery and HostAgent creation."""
@@ -346,7 +346,7 @@ if __name__ == "__main__":
     # (or Uvicorn does it if 'app' object is passed)
     # Uvicorn will call startup events registered on the app object.
     # No need to call initialize_adk_system() directly here if Uvicorn is used.
-    logger.info(f"Starting Project Horizon Live Server (direct run) on http://{LIVE_SERVER_HOST}:{LIVE_SERVER_PORT}")
+    logger.info(f"Starting Bitcoin Voice Assistant Live Server (direct run) on http://{LIVE_SERVER_HOST}:{LIVE_SERVER_PORT}")
     try:
         import uvicorn
         uvicorn.run(app, host=LIVE_SERVER_HOST, port=LIVE_SERVER_PORT, log_level="info")

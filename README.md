@@ -1,9 +1,9 @@
 # Bitcoin Voice Assistant
 
+![Logo](assets/logo.png)
+
 > [!WARNING]
 > Majority of the code in this repository was modified using [Google Gemini 2.5 Pro](https://gemini.google.com)
-
-![Logo](assets/logo.png)
 
 ## Overview
 
@@ -30,19 +30,6 @@ This project showcases and explores the integration of several key technologies:
 *   **[Agent2Agent Protocol (A2A)](https://google.github.io/A2A/)**: An open standard for communication and task delegation between independent AI agents.
     *   This repository includes examples using  a custom A2A implementation (for historical reference). An implementation with the  official **[google-a2a-python SDK](https://github.com/google/a2a-python)** is planned.
 *   **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)**: An open standard allowing agents to securely interact with dedicated "Tool Servers" that provide specific functionalities or data.
-
-## Example Applications
-
-This repository contains a growing collection of example applications, each demonstrating different aspects of multi-agent systems. Each example is self-contained within the `examples/` directory and includes its own specific setup instructions.
-
-### Available Examples:
-
-1.  **Synchronous Stock Lookup (Custom A2A/MCP Implementation)**
-    *   **Directory:** [`examples/stock_lookup_custom_a2a/`](./examples/stock_lookup_custom_a2a/)
-    *   **Description:** This is the original proof-of-concept demonstrating a real-time stock price lookup using ADK Live, a custom A2A implementation for delegation, and MCP over stdio for tool execution. It is preserved with its original dependencies for reproducibility.
-    *   **Technologies:** ADK Live, Custom A2A, Custom MCP Client, Finnhup API.
-
-*More examples demonstrating various agent architectures and protocol features will be added over time.*
 
 ## Getting Started
 
