@@ -5,6 +5,10 @@
 > [!WARNING]
 > Majority of the code in this repository was modified using [Google Gemini 2.5 Pro](https://gemini.google.com)
 
+## Demo
+
+https://github.com/user-attachments/assets/827a891b-ca29-400d-a700-0754429c9af7
+
 ## Overview
 
 **Project Horizon explores the future of collaborative, multimodal AI agent systems.** It investigates how sophisticated, responsive, and interoperable agents can be built by integrating cutting-edge agent development frameworks and open communication protocols.
