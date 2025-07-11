@@ -13,19 +13,8 @@ https://github.com/user-attachments/assets/827a891b-ca29-400d-a700-0754429c9af7
 
 ## Overview
 
-**Project Horizon explores the future of collaborative, multimodal AI agent systems.** It investigates how sophisticated, responsive, and interoperable agents can be built by integrating cutting-edge agent development frameworks and open communication protocols.
-
 ![High-Level Architecture Diagram](assets/high-level-architecture.png)
 *(This diagram illustrates the general interaction patterns explored in Project Horizon, involving a Host Agent, Specialist Agents, and Tool Servers communicating via A2A and MCP.)*
-
-This project serves as a testbed and a collection of reference implementations for:
-
-*   Integrating diverse agent frameworks and tools like **Google's Agent Development Kit (ADK)** and the **Gemini Live API**.
-*   Implementing standardized communication patterns between independent agents using protocols like **Agent2Agent (A2A)**.
-*   Enabling agents to securely interact with external tools and data sources using protocols like the **Model Context Protocol (MCP)**.
-*   Exploring advanced agent architectures, design patterns, and evaluation techniques.
-
-**Project Horizon aims to capture and demonstrate the future of agent interactions, providing technical implementations, architectural blueprints, and practical design patterns for building the next generation of AI applications.**
 
 ## Core Technologies
 
